@@ -45,7 +45,7 @@ public class CashShopOperation {
 
         try {
 
-            World.ChannelChange_Data(new CharacterTransfer(chr), chr.getId(), c.getChannel());
+            World.ChannelChange_Data(chr, chr.getId(), c.getChannel());
             c.getSession().write(CField.getChannelChange(c, Integer.parseInt(ChannelServer.getInstance(c.getChannel()).getIP().split(":")[1])));
         } finally {
             final String s = c.getSessionIPAddress();
@@ -61,7 +61,8 @@ public class CashShopOperation {
             c.getSession().close();
             return;
         }
-        MapleCharacter chr = MapleCharacter.ReconstructChr(transfer, c, false);
+        MapleCharacter chr = null; //TODO Load from loadSQLCharDB
+        		//MapleCharacter.ReconstructChr(transfer, c, false);
 
         c.setPlayer(chr);
         c.setAccID(chr.getAccountID());

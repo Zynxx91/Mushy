@@ -5,7 +5,6 @@ import handling.PacketHandler;
 import handling.RecvPacketOpcode;
 import handling.cashshop.CashShopServer;
 import handling.channel.ChannelServer;
-import handling.world.CharacterTransfer;
 import handling.world.MapleMessengerCharacter;
 import handling.world.PlayerBuffStorage;
 import handling.world.World;
@@ -36,7 +35,7 @@ public class EnterCashShopHandler {
         PlayerBuffStorage.addBuffsToStorage(c.getPlayer().getId(), c.getPlayer().getAllBuffs());
         PlayerBuffStorage.addCooldownsToStorage(c.getPlayer().getId(), c.getPlayer().getCooldowns());
         PlayerBuffStorage.addDiseaseToStorage(c.getPlayer().getId(), c.getPlayer().getAllDiseases());
-        World.ChannelChange_Data(new CharacterTransfer(c.getPlayer()), c.getPlayer().getId(), -10);
+        World.ChannelChange_Data(c.getPlayer(), c.getPlayer().getId(), -10);
         ch.removePlayer(c.getPlayer());
         c.updateLoginState(3, c.getSessionIPAddress());
         c.getPlayer().saveToDB(false, false);

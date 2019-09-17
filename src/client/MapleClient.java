@@ -1045,7 +1045,7 @@ public class MapleClient implements Serializable {
 		return true;
 	}
 
-	public final int getChannel() {
+	public int getChannel() {
 		return channel;
 	}
 

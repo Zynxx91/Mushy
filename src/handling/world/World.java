@@ -102,7 +102,7 @@ public class World {
         }
     }
 
-    public static void ChannelChange_Data(CharacterTransfer Data, int characterid, int toChannel) {
+    public static void ChannelChange_Data(MapleCharacter Data, int characterid, int toChannel) {
         getStorage(toChannel).registerPendingPlayer(Data, characterid);
     }
 

@@ -2194,12 +2194,7 @@ public class NPCConversationManager extends AbstractPlayerInteraction {
 		}, 20000); // 10 sec 10 sec
 
 	}
-
-	public void putKey(int key, int type, int action) {
-		getPlayer().changeKeybinding(key, (byte) type, action);
-		getClient().getSession().write(CField.getKeymap(getPlayer().getKeyLayout()));
-	}
-
+	
 	public void doRing(final String name, final int itemid) {
 		PlayersHandler.DoRing(getClient(), name, itemid);
 	}

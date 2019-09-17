@@ -1,5 +1,6 @@
 package handling.handlers.login;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,29 +34,21 @@ import tools.packet.JobPacket.AvengerPacket;
 public class PlayerLoggedInHandler {
 
 	@PacketHandler(opcode = RecvPacketOpcode.PLAYER_LOGGEDIN)
-	public static void handle(MapleClient c, LittleEndianAccessor lea) {
+	public static void handle(MapleClient c, LittleEndianAccessor lea) throws SQLException {
 		lea.readInt(); // this could be the world or account
 		final int playerid = lea.readInt();
 
-		MapleCharacter player;
-		
-		CharacterTransfer transfer = CashShopServer.getPlayerStorage().getPendingCharacter(playerid);
-		
-		if (transfer != null) {
-			// c.getSession().write(CWvsContext.BuffPacket.cancelBuff());
-			CashShopOperation.EnterCS(transfer, c);
-			return;
-		}
+		MapleCharacter player = CashShopServer.getPlayerStorage().getCharacterById(playerid); // Isnt this WorldServer ?
 		
 		for (ChannelServer cserv : ChannelServer.getAllInstances()) {
-			transfer = cserv.getPlayerStorage().getPendingCharacter(playerid);
-			if (transfer != null) {
+			player = cserv.getPlayerStorage().getPendingCharacter(playerid);
+			if (player != null) {
 				c.setChannel(cserv.getChannel());
 				break;
 			}
 		}
-
-		if (transfer == null) { // player couldn't be found in the storage
+		
+		if (player == null) { // player couldn't be found in the storage
 			Triple<String, String, Integer> ip = LoginServer.getLoginAuth(playerid);
 			
 			String s = c.getSessionIPAddress();
@@ -71,12 +64,9 @@ public class PlayerLoggedInHandler {
 			c.setTempIP(ip.mid);
 			c.setChannel(ip.right);
 			player = MapleCharacter.loadCharFromDB(playerid, c, true);
-		} else {
-			System.out.println("Reconstructing Character!");
-			player = MapleCharacter.ReconstructChr(transfer, c, true);
 		}
 		
-		final ChannelServer channelServer = c.getChannelServer();
+		ChannelServer channelServer = c.getChannelServer();
 		c.setPlayer(player);
 		c.setAccID(player.getAccountID());
 
@@ -177,6 +167,9 @@ public class PlayerLoggedInHandler {
 		
 		player.getClient().getSession().write(CWvsContext.broadcastMsg(channelServer.getServerMessage()));
 		player.sendMacros();
+		player.sendKeymaps();
+		
+		
 		// player.showNote();
 		// player.sendImp();
 		// player.updatePartyMemberHP();
@@ -184,8 +177,8 @@ public class PlayerLoggedInHandler {
 		// player.baseSkills(); // fix people who've lost skills.
 		if (GameConstants.isZero(player.getJob())) {
 			c.getSession().write(CWvsContext.updateLinkSkill(c.getPlayer().getSkills(), true, false, false));
-		}
-		c.getSession().write(CField.getKeymap(player.getKeyLayout()));
+		}	
+		
 		// player.updatePetAuto();
 		// player.expirationTask(true, transfer == null);
 		// c.getSession().write(CWvsContext.updateMaplePoint(player.getCSPoints(2)));

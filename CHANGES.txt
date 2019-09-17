@@ -1,0 +1,8 @@
+Changelog (16/9)
+
+- Inital Setup Of Mushy
+- Changed Minor Version to "1"
+- Created PacketCreator -> Packets will be Merged into One File in the Future
+- Removed of Non used Functions and Bad Code Practice.
+- Fixed Keymap not loading from SQL.
+- Removed of CharacterTransfer/ReconstractChar -> Loading is Done by loadCharFromDB, as It should be.

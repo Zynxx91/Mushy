@@ -2995,12 +2995,12 @@ public class MapScriptMethods {
                         sa.put(SkillFactory.getSkill(30011167), new SkillEntry((byte) 1, (byte) 1, -1));
                         sa.put(SkillFactory.getSkill(30010166), new SkillEntry((byte) 1, (byte) 1, -1));
                         c.getPlayer().changeSkillsLevel(sa);
-                        c.getPlayer().changeKeybinding(44, (byte) 1, 30010166);
-                        c.getPlayer().changeKeybinding(45, (byte) 1, 30011167);
-                        c.getPlayer().changeKeybinding(46, (byte) 1, 30011168);
-                        c.getPlayer().changeKeybinding(47, (byte) 1, 30011169);
-                        c.getPlayer().changeKeybinding(48, (byte) 1, 30011170);
-                        c.getSession().write(CField.getKeymap(c.getPlayer().getKeyLayout()));
+                        //c.getPlayer().changeKeybinding(44, (byte) 1, 30010166);
+                        //c.getPlayer().changeKeybinding(45, (byte) 1, 30011167);
+                        //c.getPlayer().changeKeybinding(46, (byte) 1, 30011168);
+                        //c.getPlayer().changeKeybinding(47, (byte) 1, 30011169);
+                        //c.getPlayer().changeKeybinding(48, (byte) 1, 30011170);
+                        //c.getSession().write(CField.getKeymap(c.getPlayer().getKeyLayout()));
                     }
                 }, 5500);
                 break;
@@ -3057,12 +3057,12 @@ public class MapScriptMethods {
             case ds_tuto_2_prep: {
                 if (!c.getPlayer().getMap().containsNPC(2159309)) {
                     c.getPlayer().getMap().spawnNpc(2159309, new Point(550, 50));
-                    c.getPlayer().changeKeybinding(44, (byte) 1, 30010166);
-                    c.getPlayer().changeKeybinding(45, (byte) 1, 30011167);
-                    c.getPlayer().changeKeybinding(46, (byte) 1, 30011168);
-                    c.getPlayer().changeKeybinding(47, (byte) 1, 30011169);
-                    c.getPlayer().changeKeybinding(48, (byte) 1, 30011170);
-                    c.getSession().write(CField.getKeymap(c.getPlayer().getKeyLayout()));
+                    //c.getPlayer().changeKeybinding(44, (byte) 1, 30010166);
+                    //c.getPlayer().changeKeybinding(45, (byte) 1, 30011167);
+                    //c.getPlayer().changeKeybinding(46, (byte) 1, 30011168);
+                    //c.getPlayer().changeKeybinding(47, (byte) 1, 30011169);
+                    //c.getPlayer().changeKeybinding(48, (byte) 1, 30011170);
+                    //c.getSession().write(CField.getKeymap(c.getPlayer().getKeyLayout()));
                     break;
                 }
             }

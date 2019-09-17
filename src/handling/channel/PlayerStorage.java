@@ -30,10 +30,8 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import client.MapleCharacter;
 import client.MapleCharacterUtil;
-import handling.world.CharacterTransfer;
 import handling.world.CheaterData;
 import handling.world.World;
-import server.Timer.PingTimer;
 
 public class PlayerStorage {
 
@@ -43,14 +41,11 @@ public class PlayerStorage {
     private final Lock wL2 = mutex2.writeLock();
     private final Map<String, MapleCharacter> nameToChar = new HashMap<>();
     private final Map<Integer, MapleCharacter> idToChar = new HashMap<>();
-    private final Map<Integer, CharacterTransfer> PendingCharacter = new HashMap<>();
+    private final Map<Integer, MapleCharacter> PendingCharacter = new HashMap<>();
     private final int channel;
 
     public PlayerStorage(int channel) {
         this.channel = channel;
-
-        // Prune once every 15 minutes
-        PingTimer.getInstance().register(new PersistingTask(), 60000);
     }
 
     public final ArrayList<MapleCharacter> getAllCharacters() {
@@ -73,7 +68,7 @@ public class PlayerStorage {
         World.Find.register(chr.getId(), chr.getName(), channel);
     }
 
-    public final void registerPendingPlayer(final CharacterTransfer chr, final int playerid) {
+    public final void registerPendingPlayer(final MapleCharacter chr, final int playerid) {
         wL2.lock();
         try {
             PendingCharacter.put(playerid, chr);//new Pair(System.currentTimeMillis(), chr));
@@ -117,7 +112,7 @@ public class PlayerStorage {
         }
     }*/
 
-    public final CharacterTransfer getPendingCharacter(final int charid) {
+    public final MapleCharacter getPendingCharacter(final int charid) {
         wL2.lock();
         try {
             return PendingCharacter.remove(charid);
@@ -280,27 +275,6 @@ public class PlayerStorage {
             }
         } finally {
             rL.unlock();
-        }
-    }
-
-    private class PersistingTask implements Runnable {
-
-        @Override
-        public void run() {
-            wL2.lock();
-            try {
-                final long currenttime = System.currentTimeMillis();
-                final Iterator<Map.Entry<Integer, CharacterTransfer>> itr = PendingCharacter.entrySet().iterator();
-
-                while (itr.hasNext()) {
-                    if (currenttime - itr.next().getValue().TranferTime > 40000) { // 40 sec
-                    	System.out.println("Removing you from the pending character list!");
-                        itr.remove();
-                    }
-                }
-            } finally {
-                wL2.unlock();
-            }
         }
     }
 }

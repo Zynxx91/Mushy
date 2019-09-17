@@ -96,7 +96,7 @@ public class ChannelServer {
 
     private ChannelServer(final int channel) {
         this.channel = channel;
-        mapFactory = new MapleMapFactory(channel);
+        this.mapFactory = new MapleMapFactory(channel);
     }
 
     public static Set<Integer> getAllInstance() {

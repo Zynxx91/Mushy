@@ -1977,8 +1977,6 @@ public final class MapleMap {
             if (!onUserEnter.equals("")) {
                 MapScriptMethods.startScript_User(chr.getClient(), onUserEnter);
             }
-
-            MapConstants.achievementRatio(chr.getClient());
             //chr.getClient().getSession().write(CField.spawnFlags(nodes.getFlags()));
             if (MapConstants.isTeamMap(mapid) && !chr.inPVP()) {
                 chr.getClient().getSession().write(CField.showEquipEffect(chr.getTeam()));

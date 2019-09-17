@@ -224,7 +224,7 @@ public class AdminCommand {
             PlayerBuffStorage.addBuffsToStorage(chr.getId(), chr.getAllBuffs());
             PlayerBuffStorage.addCooldownsToStorage(chr.getId(), chr.getCooldowns());
             PlayerBuffStorage.addDiseaseToStorage(chr.getId(), chr.getAllDiseases());
-            World.ChannelChange_Data(new CharacterTransfer(chr), chr.getId(), -10);
+            World.ChannelChange_Data(chr, chr.getId(), -10);
             ch.removePlayer(chr);
             client.updateLoginState(MapleClient.CHANGE_CHANNEL, client.getSessionIPAddress());
             chr.saveToDB(false, false);

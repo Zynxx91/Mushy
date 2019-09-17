@@ -2908,16 +2908,7 @@ public class CField {
 
 		return pw.getPacket();
 	}
-
-	public static byte[] getKeymap(MapleKeyLayout layout) {
-		PacketWriter pw = new PacketWriter();
-
-		pw.writeShort(SendPacketOpcode.KEYMAP.getValue());
-		layout.writeData(pw);
-
-		return pw.getPacket();
-	}
-
+	
 	public static byte[] petAutoHP(int itemId) {
 		PacketWriter pw = new PacketWriter();
 
