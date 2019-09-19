@@ -211,7 +211,7 @@ public class MapleServerHandler extends IoHandlerAdapter {
     }
 
     private boolean isSpamHeader(int opCode) {
-        Set<Integer> spamHeaders = new HashSet();
+        Set<Integer> spamHeaders = new HashSet<>();
         spamHeaders.add(RecvPacketOpcode.NPC_ACTION.getValue());
         spamHeaders.add(RecvPacketOpcode.MOVE_LIFE.getValue());
         spamHeaders.add(RecvPacketOpcode.MOVE_PLAYER.getValue());
@@ -221,49 +221,18 @@ public class MapleServerHandler extends IoHandlerAdapter {
     }
 
     public static void handlePacket(final RecvPacketOpcode header, final LittleEndianAccessor lea, final MapleClient c) throws Exception {
-    	
-    	/*if (ServerConfig.logPackets && !isSpamHeader(header)) {
-            String tab = "";
-            for (int i = 4; i > Integer.valueOf(header.name().length() / 8); i--) {
-                tab += "\t";
-            }
-            System.out.println("[Recv]\t" + header.name() + tab + "|\t" + header.getValue() + "\t|\t" + HexTool.getOpcodeToString(header.getValue()));
-            FileoutputUtil.log("PacketLog.txt", "\r\n\r\n[Recv]\t" + header.name() + tab + "|\t" + header.getValue() + "\t|\t" + HexTool.getOpcodeToString(header.getValue()) + "\r\n\r\n");
-        }*/	
         switch (header) {
-          /*case LOGIN_REDIRECTOR:
-                    client_username = slea.readMapleAsciiString();
-                    c.loginData(client_username);
-                    System.out.println(client_username);
-                    c.getSession().write(LoginPacket.getAuthSuccessRequest(c));
-                    break;*/
             case CLIENT_HELLO:
                 // [08] - locale
                 // [8E 00] - version
                 // [02 00] - patch version
                 break;
-       //         case CHANGE_PIC_REQUEST:
-     //           final String oldPic = slea.readMapleAsciiString();
-     //           final String newPic = slea.readMapleAsciiString();
-     //           int response = 6; // Couldn't process the request - Will never end as 6, but precautionary.
-     //         if (!c.getPic().equals(oldPic)) {
-     //               response = 20; // Incorrect pic entered
-     //          } else if (c.getPic().equals(oldPic)) {
-    //                c.setSecondPassword(newPic);
-    //                c.updateSecondPassword();
-     //               response = 0; // Success
-     //           }
-     //           c.getSession().write(LoginPacket.sendPicResponse(response));
-     //           break;  
             case CLIENT_START:
             	lea.skip(1); // locale
             	lea.skip(2); // version
             	lea.skip(1); // patch
             	lea.skip(2); // ?
                 break; 
-            case CLIENT_FAILED:
-                //c.getSession().write(LoginPacket.getCustomEncryption());
-                break;
             case VIEW_SERVERLIST:
                 if (lea.readByte() == 0) {
                     // CharLoginHandler.ServerListRequest(c);
@@ -330,10 +299,6 @@ public class MapleServerHandler extends IoHandlerAdapter {
                 break;
             case PVP_SUMMON:
                 SummonHandler.SummonPVP(lea, c);
-                break;
-            case CHAR_INFO_REQUEST:
-            	lea.skip(4); // update tick
-                PlayerHandler.CharInfoRequest(lea.readInt(), c, c.getPlayer());
                 break;
             case SPECIAL_MOVE:
                 PlayerHandler.SpecialMove(lea, c, c.getPlayer());
@@ -477,9 +442,6 @@ public class MapleServerHandler extends IoHandlerAdapter {
                 break;
             case USE_MECH_DOOR:
                 PlayersHandler.UseMechDoor(lea, c.getPlayer());
-                break;
-            case DAMAGE_REACTOR:
-                PlayersHandler.HitReactor(lea, c);
                 break;
             case CLICK_REACTOR:
             case TOUCH_REACTOR:

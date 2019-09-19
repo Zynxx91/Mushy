@@ -10,20 +10,15 @@ import client.inventory.Item;
 import client.inventory.MapleInventory;
 import client.inventory.MapleInventoryType;
 import constants.GameConstants;
-import constants.ServerConfig;
 import handling.PacketHandler;
 import handling.RecvPacketOpcode;
 import handling.cashshop.CashShopServer;
-import handling.cashshop.handler.CashShopOperation;
 import handling.channel.ChannelServer;
 import handling.channel.handler.PlayersHandler;
 import handling.login.LoginServer;
-import handling.world.CharacterTransfer;
 import handling.world.World;
 import handling.world.guild.MapleGuild;
 import server.MapleInventoryManipulator;
-import server.quest.MapleQuest;
-import server.quest.MapleQuestStatus;
 import tools.Triple;
 import tools.data.LittleEndianAccessor;
 import tools.packet.CField;
@@ -35,9 +30,8 @@ public class PlayerLoggedInHandler {
 
 	@PacketHandler(opcode = RecvPacketOpcode.PLAYER_LOGGEDIN)
 	public static void handle(MapleClient c, LittleEndianAccessor lea) throws SQLException {
-		lea.readInt(); // this could be the world or account
-		final int playerid = lea.readInt();
-
+		lea.skip(4); // Unknown
+		int playerid = lea.readInt();
 		MapleCharacter player = CashShopServer.getPlayerStorage().getCharacterById(playerid); // Isnt this WorldServer ?
 		
 		for (ChannelServer cserv : ChannelServer.getAllInstances()) {
@@ -47,38 +41,26 @@ public class PlayerLoggedInHandler {
 				break;
 			}
 		}
-		
-		if (player == null) { // player couldn't be found in the storage
+		 if (player == null) {
 			Triple<String, String, Integer> ip = LoginServer.getLoginAuth(playerid);
-			
-			String s = c.getSessionIPAddress();
-			String ss = s.substring(s.indexOf('/') + 1, s.length());
-			
-			if (ip == null|| !s.substring(s.indexOf('/') + 1, s.length()).equals(ip.left)) {
+			String theIpAddress = c.getSessionIPAddress();
+			if (ip == null|| !theIpAddress.substring(theIpAddress.indexOf('/') + 1, theIpAddress.length()).equals(ip.left)) {
 				System.out.println("Player wasn't found in the storage.");
 				c.getSession().close();
 				return;
 			}
 			LoginServer.putLoginAuth(playerid, ip.left, ip.mid, ip.right);
-
 			c.setTempIP(ip.mid);
 			c.setChannel(ip.right);
 			player = MapleCharacter.loadCharFromDB(playerid, c, true);
+		} else {
+			player = MapleCharacter.loadCharFromDB(playerid, c, true); // Change Channel Port
 		}
-		
-		ChannelServer channelServer = c.getChannelServer();
+		 		 
 		c.setPlayer(player);
 		c.setAccID(player.getAccountID());
-
-		// remote ip hack
-		if (!c.CheckIPAddress()) {
-			System.out.println("Remote hack detected (close session).");
-			c.getSession().close();
-			return;
-		}
 		
-		final int state = c.getLoginState();
-		
+		int state = c.getLoginState();
 		boolean allowLogin = false;
 		
 		if (state == MapleClient.LOGIN_SERVER_TRANSITION || state == MapleClient.CHANGE_CHANNEL || state == MapleClient.LOGIN_NOTLOGGEDIN) { 
@@ -86,20 +68,18 @@ public class PlayerLoggedInHandler {
 		}
 		
 		if (!allowLogin) {
-			System.out.println("Error! (close session).");
+			System.out.println("Error allowLogin == FALSE..");
 			c.setPlayer(null);
 			c.getSession().close();
 			return;
 		}
 		
 		c.updateLoginState(MapleClient.LOGIN_LOGGEDIN, c.getSessionIPAddress());
-		channelServer.addPlayer(player);
+		c.getChannelServer().addPlayer(player);
 
 		// player.giveCoolDowns(PlayerBuffStorage.getCooldownsFromStorage(player.getId()));
 		// player.silentGiveBuffs(PlayerBuffStorage.getBuffsFromStorage(player.getId()));
 		// player.giveSilentDebuff(PlayerBuffStorage.getDiseaseFromStorage(player.getId()));
-
-		// c.getSession().write(HexTool.getByteArrayFromHexString("18 01 00 00 FF 00 00 FF 00 00 FF 00 00 FF 00 00 FF"));
 		
 		c.getSession().write(CWvsContext.updateCrowns(new int[] { -1, -1, -1, -1, -1 }));
 		c.getSession().write(CField.getWarpToMap(player, null, 0, true));
@@ -165,7 +145,7 @@ public class PlayerLoggedInHandler {
 			e.printStackTrace();
 		}
 		
-		player.getClient().getSession().write(CWvsContext.broadcastMsg(channelServer.getServerMessage()));
+		player.getClient().getSession().write(CWvsContext.broadcastMsg(c.getChannelServer().getServerMessage()));
 		player.sendMacros();
 		player.sendKeymaps();
 		
@@ -197,13 +177,8 @@ public class PlayerLoggedInHandler {
 		if (player.getStat().equippedSummon > 0) {
 			// SkillFactory.getSkill(player.getStat().equippedSummon + (GameConstants.getBeginnerJob(player.getJob()) * 1000)).getEffect(1).applyTo(player);
 		}
-		MapleQuestStatus stat = player.getQuestNoAdd(MapleQuest.getInstance(GameConstants.PENDANT_SLOT));
-		// c.getSession().write(CWvsContext.pendantSlot(stat != null && stat.getCustomData() != null && Long.parseLong(stat.getCustomData()) > System.currentTimeMillis()));
-		stat = player.getQuestNoAdd(MapleQuest.getInstance(GameConstants.QUICK_SLOT));
-		/// c.getSession().write(CField.quickSlot(stat != null && stat.getCustomData() != null ? stat.getCustomData() : null));
 		// c.getSession().write(CWvsContext.getFamiliarInfo(player));
 		MapleInventory equipped = player.getInventory(MapleInventoryType.EQUIPPED);
-		MapleInventory equip = player.getInventory(MapleInventoryType.EQUIP);
 		List<Short> slots = new ArrayList<>();
 		for (Item item : equipped.newList()) {
 			slots.add(item.getPosition());
@@ -212,23 +187,6 @@ public class PlayerLoggedInHandler {
 			if (GameConstants.isIllegalItem(equipped.getItem(slot).getItemId())) {
 				MapleInventoryManipulator.removeFromSlot(player.getClient(), MapleInventoryType.EQUIPPED, slot, (short) 1, false);
 			}
-		}
-		// c.getSession().write(CWvsContext.shopDiscount(ServerConstants.SHOP_DISCOUNT));
-		// List<Pair<Integer, String>> npcs = new ArrayList<>();
-		// npcs.add(new Pair<>(9070006, "Why...why has this happened to me?
-		// My knightly honor... My knightly pride..."));
-		// npcs.add(new Pair<>(9000021, "Are you enjoying the event?"));
-		// c.getSession().write(NPCPacket.setNpcScriptable(npcs));
-		// c.getSession().write(NPCPacket.setNPCScriptable());
-		// player.updateReward();
-		// player.setDeathCount(99);
-		// c.getSession().write(CField.EffectPacket.updateDeathCount(99));
-		// //for fun
-		// player.getClient().getSession().write(CWvsContext.broadcastMsg(channelServer.getServerMessage()));
-		if (c.getPlayer().getLevel() < 11 && ServerConfig.RED_EVENT_10) {
-			// NPCScriptManager.getInstance().start(c, 9000108, "LoginTot");
-		} else if (c.getPlayer().getLevel() > 10 && ServerConfig.RED_EVENT) {
-			// NPCScriptManager.getInstance().start(c, 9000108, "LoginRed");
 		}
 	}
 }

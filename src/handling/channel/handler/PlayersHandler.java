@@ -228,19 +228,7 @@ public class PlayersHandler {
                 break;
         }
     }
-
-    public static void HitReactor(final LittleEndianAccessor slea, final MapleClient c) {
-        final int oid = slea.readInt();
-        final int charPos = slea.readInt();
-        final short stance = slea.readShort();
-        final MapleReactor reactor = c.getPlayer().getMap().getReactorByOid(oid);
-
-        if (reactor == null || !reactor.isAlive()) {
-            return;
-        }
-        reactor.hitReactor(charPos, stance, c);
-    }
-
+    
     public static void TouchReactor(final LittleEndianAccessor slea, final MapleClient c) {
         final int oid = slea.readInt();
         final boolean touched = slea.available() == 0 || slea.readByte() > 0; //the byte is probably the state to set it to

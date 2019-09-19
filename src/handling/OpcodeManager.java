@@ -16,9 +16,9 @@ import tools.data.LittleEndianAccessor;
 
 public class OpcodeManager {
 	
-	private static Map<Integer, Method> handlers = new HashMap<Integer, Method>();
+	private static Map<Integer, Method> handlers = new HashMap<>();
 	
-	private static Class<?>[] packethandlers = new Class<?>[] {
+	private static Class<?>[] packetHandlers = new Class<?>[] {
 		
 		PongHandler.class,
 		
@@ -81,13 +81,16 @@ public class OpcodeManager {
 		
 		ChangeMapSpecialHandler.class,
 		UseInnerPortalHandler.class,
-		ChangeKeymapHandler.class
+		ChangeKeymapHandler.class,
+		
+		CharInfoRequestHandler.class,
+		DamageReactorHandler.class
 
     };
     
 	public static void load() {
 		try {
-			for (Class<?> c : packethandlers) {
+			for (Class<?> c : packetHandlers) {
 		        for (Method method : c.getMethods()) {
 		            PacketHandler annotation = method.getAnnotation(PacketHandler.class);
 		            if (annotation != null) {
@@ -110,8 +113,7 @@ public class OpcodeManager {
 	}
     
     private static boolean isValidMethod(Method method) {
-		Class[] types = method.getParameterTypes();
-        
+		Class<?>[] types = method.getParameterTypes();
         return types.length == 2 && types[0].equals(MapleClient.class) && types[1].equals(LittleEndianAccessor.class);
     }
 

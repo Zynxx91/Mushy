@@ -11,13 +11,9 @@ import tools.IntValueHolder;
 public enum RecvPacketOpcode implements IntValueHolder {
 
 	// General
-	LOGIN_REDIRECTOR,
-	CRASH_INFO,
-	RSA,
 	PONG,
 
 	// Login Opcodes
-	GUEST_LOGIN,
 	SERVERSTATUS_REQUEST,
 	TOS,
 	VIEW_SERVERLIST,
@@ -37,8 +33,6 @@ public enum RecvPacketOpcode implements IntValueHolder {
 	CLIENT_FAILED,
 	PART_TIME_JOB,
 	CHARACTER_CARD,
-	ENABLE_LV50_CHAR,
-	CREATE_LV50_CHAR,
 	ENABLE_SPECIAL_CREATION,
 	CLIENT_HELLO,
 	LOGIN_PASSWORD,

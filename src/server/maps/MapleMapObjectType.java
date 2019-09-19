@@ -33,5 +33,6 @@ public enum MapleMapObjectType {
     REACTOR,
     EXTRACTOR,
     FAMILIAR,
-    HIRED_MERCHANT;
+    HIRED_MERCHANT,
+    CHARACTER;
 }

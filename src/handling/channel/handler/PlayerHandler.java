@@ -43,6 +43,7 @@ import server.movement.LifeMovementFragment;
 import server.quest.MapleQuest;
 import tools.AttackPair;
 import tools.FileoutputUtil;
+import tools.PacketCreator;
 import tools.Pair;
 import tools.Randomizer;
 import tools.data.LittleEndianAccessor;
@@ -229,13 +230,12 @@ public class PlayerHandler {
 	}
 
 	public static void CharInfoRequest(int objectid, MapleClient c, MapleCharacter chr) {
-		if (c.getPlayer() == null || c.getPlayer().getMap() == null) {
-			return;
-		}
 		MapleCharacter player = c.getPlayer().getMap().getCharacterById(objectid);
 		c.getSession().write(CWvsContext.enableActions());
-		if (player != null/* && (!player.isGM() || c.getPlayer().isGM()) */) {
-			c.getSession().write(CWvsContext.charInfo(player, c.getPlayer().getId() == objectid));
+		if (player != null) {
+			c.getSession().write(PacketCreator.charInfo(player, c.getPlayer().getId() == objectid));
+		} else {
+			return;
 		}
 	}
 
