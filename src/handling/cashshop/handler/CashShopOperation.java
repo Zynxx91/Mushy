@@ -20,7 +20,6 @@ import constants.GameConstants;
 import handling.cashshop.CashShopServer;
 import handling.channel.ChannelServer;
 import handling.login.LoginServer;
-import handling.world.CharacterTransfer;
 import handling.world.World;
 import net.DatabaseConnection;
 import server.MapleInventoryManipulator;
@@ -56,7 +55,7 @@ public class CashShopOperation {
         }
     }
 
-    public static void EnterCS(final CharacterTransfer transfer, final MapleClient c) {
+    public static void EnterCS(final MapleCharacter transfer, final MapleClient c) {
         if (transfer == null) {
             c.getSession().close();
             return;

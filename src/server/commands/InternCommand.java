@@ -937,26 +937,7 @@ public class InternCommand {
 			return 1;
 		}
 	}
-
-	public static class CloneMe extends CommandExecute {
-
-		@Override
-		public int execute(MapleClient c, String[] splitted) {
-			c.getPlayer().cloneLook();
-			return 1;
-		}
-	}
-
-	public static class DisposeClones extends CommandExecute {
-
-		@Override
-		public int execute(MapleClient c, String[] splitted) {
-			c.getPlayer().dropMessage(6, c.getPlayer().getCloneSize() + " clones disposed.");
-			c.getPlayer().disposeClones();
-			return 1;
-		}
-	}
-
+	
 	public static class ChatType extends CommandExecute {
 
 		@Override

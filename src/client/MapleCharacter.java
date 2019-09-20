@@ -30,8 +30,6 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 
-import org.apache.mina.common.WriteFuture;
-
 import client.MapleTrait.MapleTraitType;
 import client.inventory.Equip;
 import client.inventory.Item;
@@ -49,14 +47,12 @@ import client.inventory.MaplePotionPot;
 import client.inventory.MapleRing;
 import constants.GameConstants;
 import constants.MapConstants;
-import constants.ServerConstants;
 import handling.channel.ChannelServer;
 import handling.channel.handler.AttackInfo;
 import handling.channel.handler.PlayerHandler;
 import handling.login.LoginInformationProvider;
-import handling.login.LoginServer;
 import handling.login.LoginInformationProvider.JobType;
-import handling.world.CharacterTransfer;
+import handling.login.LoginServer;
 import handling.world.MapleCharacterLook;
 import handling.world.MapleMessenger;
 import handling.world.MapleMessengerCharacter;
@@ -116,7 +112,6 @@ import server.shops.MapleShopItem;
 import server.stores.IMaplePlayerShop;
 import tools.ConcurrentEnumMap;
 import tools.FileoutputUtil;
-import tools.MockIOSession;
 import tools.PacketCreator;
 import tools.Pair;
 import tools.Randomizer;
@@ -2053,14 +2048,6 @@ public class MapleCharacter extends AnimatedMapleMapObject implements Serializab
             }
             effects.put(statup.getKey(), new MapleBuffStatValueHolder(effect, starttime, schedule, value, localDuration, cid));
         }
-        if (clonez > 0) {
-            int cloneSize = Math.max(getNumClones(), getCloneSize());
-            if (clonez > cloneSize) { //how many clones to summon
-                for (int i = 0; i < clonez - cloneSize; i++) { //1-1=0
-                    cloneLook();
-                }
-            }
-        }
         if (!silent) {
             stats.recalcLocalStats(this);
         }
@@ -2080,7 +2067,6 @@ public class MapleCharacter extends AnimatedMapleMapObject implements Serializab
     }
 
     private boolean deregisterBuffStats(List<MapleBuffStat> stats) {
-        boolean clonez = false;
         List<MapleBuffStatValueHolder> effectsToCancel = new ArrayList<>(stats.size());
         for (MapleBuffStat stat : stats) {
             final MapleBuffStatValueHolder mbsvh = effects.remove(stat);
@@ -2124,20 +2110,17 @@ public class MapleCharacter extends AnimatedMapleMapObject implements Serializab
                     lastRecoveryTime = 0;
                 } else if (stat == MapleBuffStat.StopForceAtomInfo || stat == MapleBuffStat.ArcaneAim) {
                     linkMobs.clear();
-                } else if (stat == MapleBuffStat.ILLUSION) {
-                    disposeClones();
-                    clonez = true;
-                }
             }
         }
         for (MapleBuffStatValueHolder cancelEffectCancelTasks : effectsToCancel) {
             if (getBuffStats(cancelEffectCancelTasks.effect, cancelEffectCancelTasks.startTime).isEmpty()) {
                 if (cancelEffectCancelTasks.schedule != null) {
                     cancelEffectCancelTasks.schedule.cancel(false);
-                }
-            }
+                	}
+            	}
+        	}
         }
-        return clonez;
+        return true;
     }
 
     /**
@@ -2351,7 +2334,6 @@ public class MapleCharacter extends AnimatedMapleMapObject implements Serializab
                 default:
                     if (mbsvh.effect.isMorph()) {
                         if (mbsvh.effect.isMorph()) {
-                            disposeClones();
                             cancelEffect(mbsvh.effect, false, mbsvh.startTime);
                         }
                     }
@@ -4550,7 +4532,7 @@ public class MapleCharacter extends AnimatedMapleMapObject implements Serializab
             PreparedStatement ps;
             if (IPMac) {
                 ps = con.prepareStatement("INSERT INTO ipbans VALUES (DEFAULT, ?)");
-                ps.setString(1, client.getSession().getRemoteAddress().toString().split(":")[0]);
+                ps.setString(1, client.getSession().remoteAddress().toString().split(":")[0]);
                 ps.execute();
                 ps.close();
             }
@@ -6294,124 +6276,7 @@ public class MapleCharacter extends AnimatedMapleMapObject implements Serializab
     public WeakReference<MapleCharacter>[] getClones() {
         return clones;
     }
-
-    public MapleCharacter cloneLooks() {
-        MapleClient cloneclient = new MapleClient(null, null, new MockIOSession());
-
-        final int minus = (getId() + Randomizer.nextInt(Integer.MAX_VALUE - getId())); // really randomize it, dont want it to fail
-
-        MapleCharacter ret = new MapleCharacter(true);
-        ret.id = minus;
-        ret.client = cloneclient;
-        ret.exp = 0;
-        ret.meso = 0;
-        ret.remainingAp = 0;
-        ret.fame = 0;
-        ret.accountid = client.getAccID();
-        ret.name = name;
-        ret.level = level;
-        ret.fame = fame;
-        ret.job = job;
-        ret.hair = hair;
-        ret.face = face;
-        ret.faceMarking = faceMarking;
-        ret.elf = elf;
-        ret.skinColor = skinColor;
-        ret.monsterbook = monsterbook;
-        ret.mount = mount;
-        ret.CRand = new PlayerRandomStream();
-        ret.gmLevel = gmLevel;
-        ret.gender = gender;
-        ret.mapid = map.getId();
-        ret.map = map;
-        ret.setStance(getStance());
-        ret.chair = chair;
-        ret.itemEffect = itemEffect;
-        ret.guildid = guildid;
-        ret.stats = stats;
-        ret.effects.putAll(effects);
-        ret.dispelSummons();
-        ret.guildrank = guildrank;
-        ret.guildContribution = guildContribution;
-        ret.allianceRank = allianceRank;
-        ret.setPosition(getTruePosition());
-        for (Item equip : getInventory(MapleInventoryType.EQUIPPED).newList()) {
-            ret.getInventory(MapleInventoryType.EQUIPPED).addFromDB(equip.copy());
-        }
-        ret.skillMacros = skillMacros;
-        ret.questinfo = questinfo;
-        ret.savedLocations = savedLocations;
-        ret.wishlist = wishlist;
-        ret.buddylist = buddylist;
-        ret.keydown_skill = 0;
-        ret.lastmonthfameids = lastmonthfameids;
-        ret.lastfametime = lastfametime;
-        ret.storage = storage;
-        ret.cs = this.cs;
-        ret.client.setAccountName(client.getAccountName());
-        ret.nxcredit = nxcredit;
-        ret.acash = acash;
-        ret.maplepoints = maplepoints;
-        ret.clone = true;
-        ret.client.setChannel(this.client.getChannel());
-        while (map.getCharacterById(ret.id) != null || client.getChannelServer().getPlayerStorage().getCharacterById(ret.id) != null) {
-            ret.id++;
-        }
-        ret.client.setPlayer(ret);
-        return ret;
-    }
-
-    public final void cloneLook() {
-        if (clone || inPVP()) {
-            return;
-        }
-        for (int i = 0; i < clones.length; i++) {
-            if (clones[i].get() == null) {
-                final MapleCharacter newp = cloneLooks();
-                map.addPlayer(newp);
-                map.broadcastMessage(CField.updateCharLook(newp, false));
-                map.movePlayer(newp, getTruePosition());
-                clones[i] = new WeakReference<>(newp);
-                return;
-            }
-        }
-    }
-
-    public final void disposeClones() {
-        numClones = 0;
-        for (int i = 0; i < clones.length; i++) {
-            if (clones[i].get() != null) {
-                map.removePlayer(clones[i].get());
-                if (clones[i].get().getClient() != null) {
-                    clones[i].get().getClient().setPlayer(null);
-                    clones[i].get().client = null;
-                }
-                clones[i] = new WeakReference<>(null);
-                numClones++;
-            }
-        }
-    }
-
-    public final int getCloneSize() {
-        int z = 0;
-        for (int i = 0; i < clones.length; i++) {
-            if (clones[i].get() != null) {
-                z++;
-            }
-        }
-        return z;
-    }
-
-    public void spawnClones() {
-        if (!isGM()) { //removed tetris piece likely, expired or whatever
-            numClones = (byte) (stats.hasClone ? 1 : 0);
-        }
-        for (int i = 0; i < numClones; i++) {
-            cloneLook();
-        }
-        numClones = 0;
-    }
-
+    
     public byte getNumClones() {
         return numClones;
     }
@@ -7006,7 +6871,6 @@ public class MapleCharacter extends AnimatedMapleMapObject implements Serializab
         if (!getMechDoors().isEmpty()) {
             removeMechDoor();
         }
-        disposeClones();
         NPCScriptManager.getInstance().dispose(client);
         cancelFairySchedule(false);
     }
@@ -7976,7 +7840,7 @@ public class MapleCharacter extends AnimatedMapleMapObject implements Serializab
             ps.setInt(2, accountid);
             ps.executeUpdate();
             ps.close();
-            final String ip = client.getSession().getRemoteAddress().toString().split(":")[0];
+            final String ip = client.getSession().remoteAddress().toString().split(":")[0];
             ps = con.prepareStatement("SELECT ip FROM ipbans WHERE ip = ?");
             ps.setString(1, ip);
             ResultSet rs = ps.executeQuery();
@@ -8007,7 +7871,7 @@ public class MapleCharacter extends AnimatedMapleMapObject implements Serializab
             ps.executeUpdate();
             ps.close();
             ps = con.prepareStatement("INSERT INTO ipbans VALUES (DEFAULT, ?)");
-            String[] ipSplit = client.getSession().getRemoteAddress().toString().split(":");
+            String[] ipSplit = client.getSession().remoteAddress().toString().split(":");
             ps.setString(1, ipSplit[0]);
             ps.executeUpdate();
             ps.close();

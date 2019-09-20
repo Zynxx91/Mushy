@@ -128,9 +128,9 @@ public class Start extends Properties {
         MapleMapFactory.loadCustomLife();
 
         CashItemFactory.getInstance().initialize();
-        LoginServer.run_startup_configurations();
+        LoginServer.getLoginInstance();
         ChannelServer.startChannel_Main();
-        CashShopServer.run_startup_configurations();
+        ChannelServer.getChannelServer();
         Runtime.getRuntime().addShutdownHook(new Thread(new Shutdown()));
         World.registerRespawn();
         // ShutdownServer.registerMBean();

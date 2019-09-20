@@ -20,7 +20,6 @@ import constants.GameConstants;
 import constants.ServerConstants.PlayerGMRank;
 import handling.cashshop.CashShopServer;
 import handling.channel.ChannelServer;
-import handling.world.CharacterTransfer;
 import handling.world.MapleMessengerCharacter;
 import handling.world.PlayerBuffStorage;
 import handling.world.World;

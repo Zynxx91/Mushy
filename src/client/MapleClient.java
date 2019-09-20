@@ -24,8 +24,6 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import javax.script.ScriptEngine;
 
-import org.apache.mina.common.IoSession;
-
 import handling.cashshop.CashShopServer;
 import handling.channel.ChannelServer;
 import handling.login.LoginServer;
@@ -35,6 +33,8 @@ import handling.world.MaplePartyCharacter;
 import handling.world.PartyOperation;
 import handling.world.World;
 import handling.world.guild.MapleGuildCharacter;
+import io.netty.channel.Channel;
+import io.netty.util.AttributeKey;
 import net.DatabaseConnection;
 import net.DatabaseException;
 import server.CharacterCardFactory;
@@ -53,9 +53,12 @@ public class MapleClient implements Serializable {
 	private static final long serialVersionUID = 9179541993413738569L;
 	public static final byte LOGIN_NOTLOGGEDIN = 0, LOGIN_SERVER_TRANSITION = 1, LOGIN_LOGGEDIN = 2, CHANGE_CHANNEL = 3;
 	private static final int DEFAULT_CHARSLOT = 8;
-	public static final String CLIENT_KEY = "CLIENT";
-	private final transient MapleAESOFB send, receive;
-	private final transient IoSession session;
+	
+	public static final AttributeKey<MapleClient> CLIENT_KEY = AttributeKey.valueOf("Client");
+	private MapleAESOFB send;
+	private MapleAESOFB receive;
+	private Channel session;
+	
 	private MapleCharacter player;
 	private int channel = 1, accId = -1, world;
 	private int charslots = DEFAULT_CHARSLOT;
@@ -72,9 +75,7 @@ public class MapleClient implements Serializable {
 	private final transient Set<String> macs = new HashSet<>();
 	private final transient Map<String, ScriptEngine> engines = new HashMap<>();
 	private transient ScheduledFuture<?> idleTask = null;
-	private transient String secondPassword, salt2, tempIP = ""; // To be used
-																	// only on
-																	// login
+	private transient String secondPassword, salt2, tempIP = "";
 	private final transient Lock mutex = new ReentrantLock(true);
 	private final transient Lock npc_mutex = new ReentrantLock();
 	private long lastNpcClick = 0;
@@ -82,21 +83,21 @@ public class MapleClient implements Serializable {
 	private final Map<Integer, Pair<Short, Short>> charInfo = new LinkedHashMap<>();
 	private int client_increnement = 1;
 
-	public MapleClient(MapleAESOFB send, MapleAESOFB receive, IoSession session) {
+	public MapleClient(MapleAESOFB send, MapleAESOFB receive, Channel session) {
 		this.send = send;
 		this.receive = receive;
 		this.session = session;
 	}
 
-	public final MapleAESOFB getReceiveCrypto() {
+	public synchronized MapleAESOFB getReceiveCrypto() {
 		return receive;
 	}
 
-	public final MapleAESOFB getSendCrypto() {
+	public synchronized MapleAESOFB getSendCrypto() {
 		return send;
 	}
 
-	public final IoSession getSession() {
+	public synchronized Channel getSession() {
 		return session;
 	}
 
@@ -1013,7 +1014,7 @@ public class MapleClient implements Serializable {
 	}
 
 	public final String getSessionIPAddress() {
-		return session.getRemoteAddress().toString().split(":")[0];
+		return session.remoteAddress().toString().split(":")[0];
 	}
 
 	public final boolean CheckIPAddress() {
@@ -1462,7 +1463,7 @@ public class MapleClient implements Serializable {
             public void run() {
                 try {
                     if (lastPong - then < 0) {
-                        if (getSession().isConnected()) {
+                        if (getSession().isActive()) {
                         	System.out.println("Attempting to close the connection. :(");
                             // 	getSession().close();
                         }
@@ -1471,7 +1472,7 @@ public class MapleClient implements Serializable {
                     // client already gone
                 }
             }
-        }, 10000); // note: idletime gets added to this too)
+        }, 15000); // note: idletime gets added to this too)
      
     }
 

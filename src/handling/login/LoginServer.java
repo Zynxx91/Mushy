@@ -20,34 +20,35 @@
  */
 package handling.login;
 
-import java.io.IOException;
-import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
-import org.apache.mina.common.ByteBuffer;
-import org.apache.mina.common.IoAcceptor;
-import org.apache.mina.common.SimpleByteBufferAllocator;
-import org.apache.mina.filter.codec.ProtocolCodecFilter;
-import org.apache.mina.transport.socket.nio.SocketAcceptor;
-import org.apache.mina.transport.socket.nio.SocketAcceptorConfig;
-
 import constants.ServerConfig;
-import handling.MapleServerHandler;
-import net.mina.MapleCodecFactory;
+import io.netty.bootstrap.ServerBootstrap;
+import io.netty.buffer.UnpooledByteBufAllocator;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelOption;
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.nio.NioServerSocketChannel;
+import net.netty.ServerInitializer;
 import tools.Triple;
+import tools.data.output.LittleEndianByteBufAllocator;
 
-public class LoginServer {
+public class LoginServer  {
 
-    private static InetSocketAddress InetSocketadd;
-    private static IoAcceptor acceptor;
+    //private static InetSocketAddress InetSocketadd;
+    //private static IoAcceptor acceptor;
     private static Map<Integer, Integer> load = new HashMap<>();
     private static String serverName, eventMessage;
     private static int maxCharacters, userLimit, usersOn = 0;
     private static boolean finishedShutdown = true;
     private static final HashMap<Integer, Triple<String, String, Integer>> loginAuth = new HashMap<>();
     private static final HashSet<String> loginIPAuth = new HashSet<>();
+    private static EventLoopGroup acceptorGroup;
+    private static EventLoopGroup clientGroup;
+    private Channel acceptor;
 
     public static void putLoginAuth(int chrid, String ip, String tempIP, int channel) {
         loginAuth.put(chrid, new Triple<>(ip, tempIP, channel));
@@ -77,13 +78,19 @@ public class LoginServer {
     public static final void removeChannel(final int channel) {
         load.remove(channel);
     }
+    
+    public static void getLoginInstance() {
+    	LoginServer theLoginServer = new LoginServer();
+    	theLoginServer.run_startup_configurations();
+    }
 
-    public static final void run_startup_configurations() {
+    public final void run_startup_configurations() {
         userLimit = ServerConfig.USER_LIMIT;
         serverName = ServerConfig.SERVER_NAME;
         eventMessage = ServerConfig.EVENT_MSG;
         maxCharacters = ServerConfig.MAX_CHARACTERS;
 
+        /*
         ByteBuffer.setUseDirectBuffers(false);
         ByteBuffer.setAllocator(new SimpleByteBufferAllocator());
 
@@ -92,15 +99,20 @@ public class LoginServer {
         cfg.getSessionConfig().setTcpNoDelay(true);
         cfg.setDisconnectOnUnbind(true);
         cfg.getFilterChain().addLast("codec", new ProtocolCodecFilter(new MapleCodecFactory()));
+        */
+        
+        acceptorGroup = new NioEventLoopGroup(4);
+        clientGroup = new NioEventLoopGroup(10);
 
-        try {
-            InetSocketadd = new InetSocketAddress(8484);
-            acceptor.bind(InetSocketadd, new MapleServerHandler(), cfg);
-            System.out.println("Login Server is listening on port 8484.");
-        } catch (IOException e) {
-            System.out.println(" Failed!");
-            System.err.println("Could not bind to port 8484: " + e);
-        }
+        acceptor = new ServerBootstrap()
+                .group(acceptorGroup, clientGroup)
+                .channel(NioServerSocketChannel.class)
+                .childHandler(new ServerInitializer())
+                .option(ChannelOption.SO_BACKLOG, 64)
+                .option(ChannelOption.ALLOCATOR, new LittleEndianByteBufAllocator(UnpooledByteBufAllocator.DEFAULT))
+                .childOption(ChannelOption.SO_KEEPALIVE, true)
+                .bind(8484).syncUninterruptibly().channel();  
+            	System.out.println("Login Server is listening on port 8484.");
     }
 
     public static final void shutdown() {
@@ -108,7 +120,7 @@ public class LoginServer {
             return;
         }
         System.out.println("Shutting down login...");
-        acceptor.unbindAll();
+        //acceptor.unbindAll();
         finishedShutdown = true; //nothing. lol
     }
 
@@ -156,11 +168,7 @@ public class LoginServer {
     public static final void setUserLimit(final int newLimit) {
         userLimit = newLimit;
     }
-
-    public static final int getNumberOfSessions() {
-        return acceptor.getManagedSessions(InetSocketadd).size();
-    }
-
+    
     public static final boolean isShutdown() {
         return finishedShutdown;
     }

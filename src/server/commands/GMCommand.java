@@ -1223,26 +1223,7 @@ public class GMCommand {
             return 1;
         }
     }
-
-    public static class CloneMe extends CommandExecute {
-
-        @Override
-        public int execute(MapleClient c, String[] splitted) {
-            c.getPlayer().cloneLook();
-            return 1;
-        }
-    }
-
-    public static class DisposeClones extends CommandExecute {
-
-        @Override
-        public int execute(MapleClient c, String[] splitted) {
-            c.getPlayer().dropMessage(6, c.getPlayer().getCloneSize() + " clones disposed.");
-            c.getPlayer().disposeClones();
-            return 1;
-        }
-    }
-
+    
     public static class SetInstanceProperty extends CommandExecute {
 
         @Override
@@ -1493,7 +1474,7 @@ public class GMCommand {
 
         @Override
         public int execute(MapleClient c, String[] splitted) {
-            c.getPlayer().dropMessage(5, "IP: " + c.getSession().getRemoteAddress().toString().split(":")[0]);
+            c.getPlayer().dropMessage(5, "IP: " + c.getSession().remoteAddress().toString().split(":")[0]);
             return 1;
         }
     }

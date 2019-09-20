@@ -924,55 +924,9 @@ public final class MapleMap {
             }
         }
     }
-
-    public final void limitReactor(final int rid, final int num) {
-        List<MapleReactor> toDestroy = new ArrayList<>();
-        Map<Integer, Integer> contained = new LinkedHashMap<>();
-        mapobjectlocks.get(MapleMapObjectType.REACTOR).readLock().lock();
-        try {
-            for (MapleMapObject obj : mapobjects.get(MapleMapObjectType.REACTOR).values()) {
-                MapleReactor mr = (MapleReactor) obj;
-                if (contained.containsKey(mr.getReactorId())) {
-                    if (contained.get(mr.getReactorId()) >= num) {
-                        toDestroy.add(mr);
-                    } else {
-                        contained.put(mr.getReactorId(), contained.get(mr.getReactorId()) + 1);
-                    }
-                } else {
-                    contained.put(mr.getReactorId(), 1);
-                }
-            }
-        } finally {
-            mapobjectlocks.get(MapleMapObjectType.REACTOR).readLock().unlock();
-        }
-        for (MapleReactor mr : toDestroy) {
-            destroyReactor(mr.getObjectId());
-        }
-    }
-
-    public final void destroyReactors(final int first, final int last) {
-        List<MapleReactor> toDestroy = new ArrayList<>();
-        mapobjectlocks.get(MapleMapObjectType.REACTOR).readLock().lock();
-        try {
-            for (MapleMapObject obj : mapobjects.get(MapleMapObjectType.REACTOR).values()) {
-                MapleReactor mr = (MapleReactor) obj;
-                if (mr.getReactorId() >= first && mr.getReactorId() <= last) {
-                    toDestroy.add(mr);
-                }
-            }
-        } finally {
-            mapobjectlocks.get(MapleMapObjectType.REACTOR).readLock().unlock();
-        }
-        for (MapleReactor mr : toDestroy) {
-            destroyReactor(mr.getObjectId());
-        }
-    }
-
-    public final void destroyReactor(final int oid) {
-        final MapleReactor reactor = getReactorByOid(oid);
-        if (reactor == null) {
-            return;
-        }
+    
+    public void destroyReactor(final int oid) {
+        MapleReactor reactor = getReactorByOid(oid);
         broadcastMessage(CField.destroyReactor(reactor));
         reactor.setAlive(false);
         removeMapObject(reactor);
@@ -981,14 +935,14 @@ public final class MapleMap {
         if (reactor.getDelay() > 0) {
             MapTimer.getInstance().schedule(new Runnable() {
                 @Override
-                public final void run() {
+                public void run() {
                     respawnReactor(reactor);
                 }
             }, reactor.getDelay());
         }
     }
 
-    public final void reloadReactors() {
+    public void reloadReactors() {
         List<MapleReactor> toSpawn = new ArrayList<>();
         mapobjectlocks.get(MapleMapObjectType.REACTOR).readLock().lock();
         try {

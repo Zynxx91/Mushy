@@ -33,8 +33,6 @@ import java.util.TimeZone;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import org.apache.mina.common.WriteFuture;
-
 import client.MapleBuffStat;
 import client.MapleCharacter;
 import client.MapleClient;
@@ -52,6 +50,7 @@ import client.inventory.MapleRing;
 import constants.GameConstants;
 import constants.MapConstants;
 import handling.world.MaplePartyCharacter;
+import io.netty.channel.ChannelFuture;
 import lib.data.MapleData;
 import lib.data.MapleDataProvider;
 import lib.data.MapleDataProviderFactory;
@@ -456,7 +455,7 @@ public class PlayersHandler {
             return;
         }
         c.getPlayer().setMarriageItemId(itemid);
-        WriteFuture write = chr.getClient().getSession().write(CWvsContext.sendEngagementRequest(c.getPlayer().getName(), c.getPlayer().getId()));
+        ChannelFuture write = chr.getClient().getSession().write(CWvsContext.sendEngagementRequest(c.getPlayer().getName(), c.getPlayer().getId()));
     }
 
     public static void RingAction(final LittleEndianAccessor slea, final MapleClient c) {

@@ -62,7 +62,7 @@ public class LoginPasswordHandler {
             loginok = 3;
             if (macBan) {
                 // this is only an ipban o.O" - maybe we should refactor this a bit so it's more readable
-                MapleCharacter.ban(c.getSession().getRemoteAddress().toString().split(":")[0], "Enforcing account ban, account " + login, false, 4, false);
+                MapleCharacter.ban(c.getSession().remoteAddress().toString().split(":")[0], "Enforcing account ban, account " + login, false, 4, false);
             }
         }
         if (loginok != 0) {

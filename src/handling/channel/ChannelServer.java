@@ -36,13 +36,26 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import io.netty.bootstrap.ServerBootstrap;
+import io.netty.buffer.UnpooledByteBufAllocator;
+
+/*
 import org.apache.mina.common.ByteBuffer;
 import org.apache.mina.common.IoAcceptor;
 import org.apache.mina.common.SimpleByteBufferAllocator;
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
 import org.apache.mina.transport.socket.nio.SocketAcceptor;
 import org.apache.mina.transport.socket.nio.SocketAcceptorConfig;
+*/
 
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelOption;
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.SocketChannel;
+import io.netty.channel.socket.nio.NioServerSocketChannel;
+import net.netty.ServerInitializer;
 import client.MapleCharacter;
 import constants.EventConstants;
 import constants.ServerConfig;
@@ -50,7 +63,7 @@ import constants.WorldConstants.WorldOption;
 import handling.MapleServerHandler;
 import handling.login.LoginServer;
 import handling.world.CheaterData;
-import net.mina.MapleCodecFactory;
+//import net.mina.MapleCodecFactory;
 import script.event.EventScriptManager;
 import server.MapleSquad;
 import server.MapleSquad.MapleSquadType;
@@ -68,6 +81,7 @@ import server.maps.MapleMapFactory;
 import server.maps.MapleMapObject;
 import server.stores.HiredMerchant;
 import tools.ConcurrentEnumMap;
+import tools.data.output.LittleEndianByteBufAllocator;
 import tools.packet.CWvsContext;
 
 public class ChannelServer {
@@ -80,7 +94,7 @@ public class ChannelServer {
     private String serverMessage, ip, serverName;
     private boolean shutdown = false, finishedShutdown = false, MegaphoneMuteState = false;
     private PlayerStorage players;
-    private IoAcceptor acceptor;
+    //private IoAcceptor acceptor;
     private final MapleMapFactory mapFactory;
     private EventScriptManager eventSM;
     private final AramiaFireWorks works = new AramiaFireWorks();
@@ -93,6 +107,9 @@ public class ChannelServer {
     private final Map<MapleEventType, MapleEvent> events = new EnumMap<>(MapleEventType.class);
     private boolean manualEvent = false;
     private int manualEventMap = 0;
+    private EventLoopGroup acceptorGroup;
+    private EventLoopGroup clientGroup;
+    private Channel acceptor;
 
     private ChannelServer(final int channel) {
         this.channel = channel;
@@ -115,6 +132,11 @@ public class ChannelServer {
         events.put(MapleEventType.Snowball, new MapleSnowball(channel, MapleEventType.Snowball));
         events.put(MapleEventType.Survival, new MapleSurvival(channel, MapleEventType.Survival));
     }
+    	
+    public static void getChannelInstance() {
+        	ChannelServer theChannelServer = new ChannelServer(-1);
+        	theChannelServer.run_startup_configurations();
+        }	
 
     private final void run_startup_configurations() {
         setChannel(channel); //instances.put
@@ -127,6 +149,20 @@ public class ChannelServer {
             throw new RuntimeException(e);
         }
         ip = ServerConfig.IP_ADDRESS + ":" + port;
+        
+        acceptorGroup = new NioEventLoopGroup(4);
+        clientGroup = new NioEventLoopGroup(10);
+
+        acceptor = new ServerBootstrap()
+                .group(acceptorGroup, clientGroup)
+                .channel(NioServerSocketChannel.class)
+                .childHandler(new ServerInitializer())
+                .option(ChannelOption.SO_BACKLOG, 64)
+                .option(ChannelOption.ALLOCATOR, new LittleEndianByteBufAllocator(UnpooledByteBufAllocator.DEFAULT))
+                .childOption(ChannelOption.SO_KEEPALIVE, true)
+                .bind(port).syncUninterruptibly().channel();     
+        
+        /*
 
         ByteBuffer.setUseDirectBuffers(false);
         ByteBuffer.setAllocator(new SimpleByteBufferAllocator());
@@ -136,16 +172,16 @@ public class ChannelServer {
         acceptor_config.getSessionConfig().setTcpNoDelay(true);
         acceptor_config.setDisconnectOnUnbind(true);
         acceptor_config.getFilterChain().addLast("codec", new ProtocolCodecFilter(new MapleCodecFactory()));
+        
+        */
+        
+        
         players = new PlayerStorage(channel);
         loadEvents();
 
-        try {
-            acceptor.bind(new InetSocketAddress(port), new MapleServerHandler(), acceptor_config);
-            System.out.println("Channel " + channel + " is listening on port " + port + ".");
-            eventSM.init();
-        } catch (IOException e) {
-            System.out.println("Could not bind port " + port + " (ch: " + getChannel() + ")" + e);
-        }
+        //acceptor.bind(new InetSocketAddress(port));
+		System.out.println("Channel " + channel + " is listening on port " + port + ".");
+		eventSM.init();
     }
 
     public final void shutdown() {

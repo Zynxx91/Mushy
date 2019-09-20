@@ -14,7 +14,6 @@ import client.MapleBuffStat;
 import client.MapleBuffStatValueHolder;
 import client.MapleCharacter;
 import client.MapleClient;
-import client.MapleKeyLayout;
 import client.MonsterFamiliar;
 import client.Skill;
 import client.SkillMacro;

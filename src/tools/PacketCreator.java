@@ -37,6 +37,7 @@ import handling.SendPacketOpcode;
 import handling.world.World;
 import handling.world.guild.MapleGuild;
 import handling.world.guild.MapleGuildAlliance;
+import server.maps.MapleReactor;
 import tools.data.PacketWriter;
 import tools.packet.PacketHelper;
 
@@ -166,6 +167,21 @@ public class PacketCreator {
 		pw.writeInt(0x1E);
 		pw.writeInt(0);
 
+		return pw.getPacket();
+	}
+	
+	public static byte[] triggerReactor(MapleReactor reactor, short stance) {
+		PacketWriter pw = new PacketWriter();
+
+		pw.writeShort(SendPacketOpcode.REACTOR_HIT.getValue());
+        pw.writeInt(reactor.getObjectId()); // m_mReactor
+        pw.write(reactor.getState()); // nState
+        pw.writePos(reactor.getTruePosition()); // ptPos.x, ptPos.y
+        pw.writeShort(stance); // Should be short, KMST IDA && 176.1 IDA
+        pw.write(0); // nProperEventIdx
+        pw.write(4); // tStateEnd (time + 100 * value)
+        pw.writeInt(0); // KMST && 176.1 IDA stated another Int here, dwOwnerID. 
+        
 		return pw.getPacket();
 	}
 

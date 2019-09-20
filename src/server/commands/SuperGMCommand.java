@@ -21,7 +21,6 @@ import com.mysql.jdbc.Connection;
 import com.mysql.jdbc.PreparedStatement;
 
 import client.MapleCharacter;
-import client.MapleCharacterUtil;
 import client.MapleClient;
 import client.Skill;
 import client.SkillFactory;
@@ -66,7 +65,6 @@ import server.maps.MapleReactorFactory;
 import server.quest.MapleQuest;
 import server.shops.MapleShopFactory;
 import tools.HexTool;
-import tools.MockIOSession;
 import tools.Pair;
 import tools.StringUtil;
 import tools.packet.CField;
@@ -1090,8 +1088,9 @@ public class SuperGMCommand {
         public int execute(MapleClient c, String[] splitted) {
             try {
                 c.getPlayer().dropMessage(6, "Making playerNPC...");
-                MapleClient cs = new MapleClient(null, null, new MockIOSession());
-                MapleCharacter chhr = MapleCharacter.loadCharFromDB(MapleCharacterUtil.getIdByName(splitted[1]), cs, false);
+                //MapleClient cs = new MapleClient(null, null, new MockIOSession());
+                MapleCharacter chhr = null;
+                //= MapleCharacter.loadCharFromDB(MapleCharacterUtil.getIdByName(splitted[1]), cs, false);
                 if (chhr == null) {
                     c.getPlayer().dropMessage(6, splitted[1] + " does not exist");
                     return 0;
@@ -1176,40 +1175,7 @@ public class SuperGMCommand {
             return 1;
         }
     }
-
-    public static class P extends CommandExecute {
-
-        @Override
-        public int execute(MapleClient c, String[] splitted) {
-            if (splitted.length > 1) {
-                c.getSession().write(CField.getPacketFromHexString(StringUtil.joinStringFrom(splitted, 1)));
-            } else {
-                c.getPlayer().dropMessage(6, "Please enter packet data!");
-            }
-            return 1;
-        }
-    }
-
-    public static class Packet extends P {
-    }
-
-    public static class PTS extends CommandExecute {
-
-        @Override
-        public int execute(MapleClient c, String[] splitted) {
-            if (splitted.length > 1) {
-                try {
-                    c.getSession().getHandler().messageReceived(c.getSession(), (Object) CField.getPacketFromHexString(StringUtil.joinStringFrom(splitted, 1)));
-                } catch (Exception e) {
-                    c.getPlayer().dropMessage(6, "Error: " + e);
-                }
-            } else {
-                c.getPlayer().dropMessage(6, "Please enter packet data!");
-            }
-            return 1;
-        }
-    }
-
+    
     public static class ReloadMap extends CommandExecute {
 
         @Override

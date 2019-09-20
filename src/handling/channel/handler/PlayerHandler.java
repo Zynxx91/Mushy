@@ -277,7 +277,7 @@ public class PlayerHandler {
 			target = c.getChannelServer().getPlayerStorage().getCharacterByName(victim);
 			if (target != null) {
 				String readableTargetName = MapleCharacter.makeMapleReadable(target.getName());
-				String ip = target.getClient().getSession().getRemoteAddress().toString().split(":")[0];
+				String ip = target.getClient().getSession().remoteAddress().toString().split(":")[0];
 				reason += readableTargetName + " (IP: " + ip + ")";
 				target.ban(reason, false, false);
 				target.sendPolice("You have been blocked by #bMapleGM #kfor the HACK reason.");
@@ -298,7 +298,7 @@ public class PlayerHandler {
 			target = c.getChannelServer().getPlayerStorage().getCharacterByName(victim);
 			if (target != null) {
 				String readableTargetName = MapleCharacter.makeMapleReadable(target.getName());
-				String ip = target.getClient().getSession().getRemoteAddress().toString().split(":")[0];
+				String ip = target.getClient().getSession().remoteAddress().toString().split(":")[0];
 				reason += readableTargetName + " (IP: " + ip + ")";
 				if (duration == -1) {
 					target.ban(description + " " + reason, true);
